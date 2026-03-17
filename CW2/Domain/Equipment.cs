@@ -2,6 +2,12 @@
 
 namespace CW2.Domain;
 
+using System.Text.Json.Serialization;
+
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(Laptop), "laptop")]
+[JsonDerivedType(typeof(Projector), "projector")]
+[JsonDerivedType(typeof(Camera), "camera")]
 public abstract class Equipment
 {
     private static int _nextId = 1;
