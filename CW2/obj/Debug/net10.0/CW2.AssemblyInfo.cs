@@ -13,11 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CW2")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-<<<<<<< HEAD
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5e667b54d24bc22715a7a5cdade0f27b6dc5693a")]
-=======
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+075d2d083f10aaa1cee6b04e132cfd9d1dbb261e")]
->>>>>>> JsonLoader
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f13889f069e88cb8428cc79aba0a9743a486cb78")]
 [assembly: System.Reflection.AssemblyProductAttribute("CW2")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CW2")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
