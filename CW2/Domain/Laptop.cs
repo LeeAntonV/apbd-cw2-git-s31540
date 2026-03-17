@@ -2,8 +2,8 @@
 {
     public class Laptop : Equipment
     {
-        public Laptop(string name, string brand, int ramGb, string cpuModel)
-            : base(name, name)
+        public Laptop(string name, string description, string brand, int ramGb, string cpuModel)
+            : base(name, description)
         {
             Brand = brand;
             RamGb = ramGb;

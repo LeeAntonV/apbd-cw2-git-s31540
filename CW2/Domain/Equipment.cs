@@ -5,7 +5,7 @@ namespace CW2.Domain;
 public abstract class Equipment
 {
     private static int _nextId = 1;
-    public int Id { get; set; }
+    public int Id { get;}
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
     public DateTime AddedDate { get; set; }

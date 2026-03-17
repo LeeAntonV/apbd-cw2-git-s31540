@@ -2,8 +2,8 @@
 {
     public class Projector : Equipment
     {
-        public Projector(string name, int brightnessLumens, string resolution, string technology)
-            : base(name, name)
+        public Projector(string name,string description, int brightnessLumens, string resolution, string technology)
+            : base(name, description)
         {
             BrightnessLumens = brightnessLumens;
             Resolution = resolution;
