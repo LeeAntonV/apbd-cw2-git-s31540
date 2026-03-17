@@ -1,0 +1,28 @@
+﻿using CW2.Enum;
+
+namespace CW2.Domain;
+
+using System.Text.Json.Serialization;
+
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(Laptop), "laptop")]
+[JsonDerivedType(typeof(Projector), "projector")]
+[JsonDerivedType(typeof(Camera), "camera")]
+public abstract class Equipment
+{
+    private static int _nextId = 1;
+    public int Id { get;}
+    public string Name { get; set; } = null!;
+    public string Description { get; set; } = null!;
+    public DateTime AddedDate { get; set; }
+    public Status status { get; set; } = Status.Available;
+
+    public Equipment(string name, string description = "")
+    {
+        Id = _nextId++;
+        Name = name;
+        Description = description;
+        AddedDate = DateTime.Now;
+        status = Status.Available;
+    }
+}
