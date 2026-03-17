@@ -3,7 +3,7 @@ using CW2.Services;
 
 namespace CW2;
 
-internal class Program
+public class Program
 {
     static void Main(string[] args)
     {
