@@ -1,6 +1,11 @@
-﻿namespace CW2.Domain;
+﻿using CW2.Enum;
 
-public class Employee
+namespace CW2.Domain;
+
+public class Employee : User
 {
-    
+    public Employee(string firstName, string lastName)
+        : base(firstName, lastName, UserType.Employee)
+    {
+    }
 }
