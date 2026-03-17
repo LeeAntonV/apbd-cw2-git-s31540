@@ -1,5 +1,5 @@
 ﻿namespace CW2.Domain;
-
+    
 public class Rental
 {
     private static int _nextId = 1;
