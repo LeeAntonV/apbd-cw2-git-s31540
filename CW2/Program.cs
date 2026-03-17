@@ -1,122 +1,288 @@
-﻿using CW2.Domain;
+﻿using CW2.Data;
+using CW2.Domain;
 using CW2.Services;
 
 namespace CW2;
 
-public class Program
+internal class Program
 {
     static void Main(string[] args)
     {
         var rentalService = new RentalService();
+        var storage = new JsonStorage();
+        string filePath = "data.json";
 
-        var student1 = new Student("John", "Doe");
-        var student2 = new Student("John", "Smith");
-        var employee1 = new Employee("John", "Smith");
+        var data = storage.Load(filePath);
+        rentalService.LoadData(data.Users, data.Equipment, data.Rentals);
 
-        PrintResult(rentalService.AddUser(student1));
-        PrintResult(rentalService.AddUser(student2));
-        PrintResult(rentalService.AddUser(employee1));
-
-        Console.WriteLine();
-
-        var laptop1 = new Laptop("Dell Latitude 5440", "Office laptop", "Dell", 16, "Intel i7");
-        var laptop2 = new Laptop("Lenovo ThinkPad T14", "Programming laptop", "Lenovo", 32, "Ryzen 7");
-        var projector1 = new Projector("Epson EB-FH06", "Lecture hall projector", 3500, "1920x1080", "SuperTech");
-        var camera1 = new Camera("Canon EOS 250D", "DSLR camera", "Canon", 24.1, true);
-
-        PrintResult(rentalService.AddEquipment(laptop1));
-        PrintResult(rentalService.AddEquipment(laptop2));
-        PrintResult(rentalService.AddEquipment(projector1));
-        PrintResult(rentalService.AddEquipment(camera1));
-
-        Console.WriteLine();
-        Console.WriteLine("=== FULL EQUIPMENT LIST ===");
-        PrintEquipment(rentalService.GetAllEquipment());
-
-        Console.WriteLine();
-        Console.WriteLine("=== ONLY AVAILABLE EQUIPMENT ===");
-        PrintEquipment(rentalService.GetAvailableEquipment());
-
-        Console.WriteLine();
-        Console.WriteLine("=== CORRECT RENTAL OPERATION ===");
-        var rent1 = rentalService.RentEquipment(student1.Id, laptop1.Id, 5, new DateTime(2026, 3, 1));
-        PrintResult(rent1);
-
-        Console.WriteLine();
-        Console.WriteLine("=== INVALID OPERATION: RENTING ALREADY RENTED EQUIPMENT ===");
-        var invalidRent1 = rentalService.RentEquipment(employee1.Id, laptop1.Id, 3, new DateTime(2026, 3, 1));
-        PrintResult(invalidRent1);
-
-        Console.WriteLine();
-        Console.WriteLine("=== INVALID OPERATION: EXCEEDING STUDENT LIMIT ===");
-        var rent2 = rentalService.RentEquipment(student1.Id, laptop2.Id, 4, new DateTime(2026, 3, 2));
-        var rent3 = rentalService.RentEquipment(student1.Id, projector1.Id, 3, new DateTime(2026, 3, 2));
-
-        PrintResult(rent2);
-        PrintResult(rent3);
-
-        Console.WriteLine();
-        Console.WriteLine("=== MARK EQUIPMENT AS UNAVAILABLE ===");
-        PrintResult(rentalService.MarkEquipmentUnavailable(camera1.Id));
-
-        Console.WriteLine();
-        Console.WriteLine("=== INVALID OPERATION: RENTING UNAVAILABLE EQUIPMENT ===");
-        var invalidRent2 = rentalService.RentEquipment(employee1.Id, camera1.Id, 2, new DateTime(2026, 3, 2));
-        PrintResult(invalidRent2);
-
-        Console.WriteLine();
-        Console.WriteLine($"=== ACTIVE RENTALS FOR USER {student1.FirstName} {student1.LastName} ===");
-        PrintRentals(rentalService.GetActiveRentalsForUser(student1.Id));
-
-        Console.WriteLine();
-        Console.WriteLine("=== RETURN COMPLETED ON TIME ===");
-        PrintResult(rentalService.ReturnEquipment(1, new DateTime(2026, 3, 6)));
-
-        Console.WriteLine();
-        Console.WriteLine("=== DELAYED RETURN WITH PENALTY ===");
-
-        var employeeLaptop = new Laptop("HP ProBook 450", "Employee laptop", "HP", 16, "Intel i5");
-        PrintResult(rentalService.AddEquipment(employeeLaptop));
-
-        var lateRental = rentalService.RentEquipment(employee1.Id, employeeLaptop.Id, 3, new DateTime(2026, 3, 1));
-        PrintResult(lateRental);
-
-        PrintResult(rentalService.ReturnEquipment(3, new DateTime(2026, 3, 8)));
-
-        Console.WriteLine();
-        Console.WriteLine("=== OVERDUE RENTALS ON 2026-03-10 ===");
-        PrintRentals(rentalService.GetOverdueRentals(new DateTime(2026, 3, 10)));
-
-        Console.WriteLine();
-        Console.WriteLine("=== FINAL SUMMARY REPORT ===");
-        Console.WriteLine(rentalService.GenerateSummaryReport(new DateTime(2026, 3, 10)));
-
-        Console.WriteLine();
-        Console.WriteLine("=== FINAL EQUIPMENT STATE ===");
-        PrintEquipment(rentalService.GetAllEquipment());
-    }
-
-    private static void PrintResult(OperationResult result)
-    {
-        Console.WriteLine(result);
-    }
-
-    private static void PrintEquipment(IEnumerable<Equipment> equipmentList)
-    {
-        foreach (var equipment in equipmentList)
+        if (!rentalService.GetUsers().Any() && !rentalService.GetEquipment().Any())
         {
-            Console.WriteLine(
-                $"Id: {equipment.Id}, " +
-                $"Name: {equipment.Name}, " +
-                $"Status: {equipment.status}, " +
-                $"Added: {equipment.AddedDate:yyyy-MM-dd}");
+            SeedSampleData(rentalService);
+        }
+
+        Console.WriteLine("=== DEMONSTRATION SCENARIO ===");
+        RunDemoScenario(rentalService);
+
+        Console.WriteLine();
+        Console.WriteLine("=== INTERACTIVE MENU ===");
+        RunMenu(rentalService);
+
+        storage.Save(
+            filePath,
+            rentalService.GetUsers(),
+            rentalService.GetEquipment(),
+            rentalService.GetRentals()
+        );
+
+        Console.WriteLine("Data saved.");
+    }
+
+    static void SeedSampleData(RentalService rentalService)
+    {
+        rentalService.AddUser(new Student("Anton", "Lee"));
+        rentalService.AddUser(new Student("Anton", "Lee"));
+        rentalService.AddUser(new Employee("Anton", "Lee"));
+
+        rentalService.AddEquipment(new Laptop("Dell Latitude 5440", "Office laptop", "Dell", 16, "Intel i7"));
+        rentalService.AddEquipment(new Laptop("Lenovo ThinkPad T14", "Programming laptop", "Lenovo", 32, "Ryzen 7"));
+        rentalService.AddEquipment(new Projector("Epson EB-FH06", "Lecture hall projector", 3500, "1920x1080", "LCD"));
+        rentalService.AddEquipment(new Camera("Canon EOS 250D", "DSLR camera", "Canon", 24.1, true));
+    }
+
+    static void RunDemoScenario(RentalService rentalService)
+    {
+        if (rentalService.GetRentals().Any())
+        {
+            Console.WriteLine("Demo scenario skipped because rentals already exist.");
+            Console.WriteLine(rentalService.GenerateSummaryReport(DateTime.Today));
+            return;
+        }
+
+        Console.WriteLine(rentalService.RentEquipment(1, 1, 5, new DateTime(2026, 3, 1)));
+        Console.WriteLine(rentalService.RentEquipment(3, 1, 3, new DateTime(2026, 3, 1)));
+        Console.WriteLine(rentalService.RentEquipment(1, 2, 4, new DateTime(2026, 3, 2)));
+        Console.WriteLine(rentalService.RentEquipment(1, 3, 3, new DateTime(2026, 3, 2)));
+        Console.WriteLine(rentalService.MarkEquipmentUnavailable(4));
+        Console.WriteLine(rentalService.RentEquipment(3, 4, 2, new DateTime(2026, 3, 2)));
+        Console.WriteLine(rentalService.ReturnEquipment(1, new DateTime(2026, 3, 6)));
+
+        rentalService.AddEquipment(new Laptop("HP ProBook 450", "Employee laptop", "HP", 16, "Intel i5"));
+        Console.WriteLine(rentalService.RentEquipment(3, 5, 3, new DateTime(2026, 3, 1)));
+        Console.WriteLine(rentalService.ReturnEquipment(3, new DateTime(2026, 3, 8)));
+
+        Console.WriteLine();
+        Console.WriteLine(rentalService.GenerateSummaryReport(new DateTime(2026, 3, 10)));
+    }
+
+    static void RunMenu(RentalService rentalService)
+    {
+        while (true)
+        {
+            Console.WriteLine();
+            Console.WriteLine("1. Add user");
+            Console.WriteLine("2. Add equipment");
+            Console.WriteLine("3. Show all equipment");
+            Console.WriteLine("4. Show available equipment");
+            Console.WriteLine("5. Rent equipment");
+            Console.WriteLine("6. Return equipment");
+            Console.WriteLine("7. Mark equipment unavailable");
+            Console.WriteLine("8. Show active rentals for user");
+            Console.WriteLine("9. Show overdue rentals");
+            Console.WriteLine("10. Show summary report");
+            Console.WriteLine("11. Save data now");
+            Console.WriteLine("0. Exit");
+            Console.Write("Choose option: ");
+
+            string? choice = Console.ReadLine();
+            Console.WriteLine();
+
+            switch (choice)
+            {
+                case "1":
+                    AddUserMenu(rentalService);
+                    break;
+                case "2":
+                    AddEquipmentMenu(rentalService);
+                    break;
+                case "3":
+                    ShowAllEquipment(rentalService);
+                    break;
+                case "4":
+                    ShowAvailableEquipment(rentalService);
+                    break;
+                case "5":
+                    RentEquipmentMenu(rentalService);
+                    break;
+                case "6":
+                    ReturnEquipmentMenu(rentalService);
+                    break;
+                case "7":
+                    MarkEquipmentUnavailableMenu(rentalService);
+                    break;
+                case "8":
+                    ShowActiveRentalsForUserMenu(rentalService);
+                    break;
+                case "9":
+                    ShowOverdueRentals(rentalService);
+                    break;
+                case "10":
+                    Console.WriteLine(rentalService.GenerateSummaryReport(DateTime.Today));
+                    break;
+                case "11":
+                    var storage = new JsonStorage();
+                    storage.Save("data.json", rentalService.GetUsers(), rentalService.GetEquipment(), rentalService.GetRentals());
+                    Console.WriteLine("Data saved.");
+                    break;
+                case "0":
+                    Console.WriteLine("Exiting program.");
+                    return;
+                default:
+                    Console.WriteLine("Invalid option.");
+                    break;
+            }
         }
     }
 
-    private static void PrintRentals(IEnumerable<Rental> rentals)
+    static void AddUserMenu(RentalService rentalService)
     {
-        bool any = false;
+        Console.Write("Enter user type (student/employee): ");
+        string? type = Console.ReadLine()?.Trim().ToLower();
 
+        Console.Write("Enter first name: ");
+        string firstName = Console.ReadLine() ?? "";
+
+        Console.Write("Enter last name: ");
+        string lastName = Console.ReadLine() ?? "";
+
+        if (type == "student")
+        {
+            Console.WriteLine(rentalService.AddUser(new Student(firstName, lastName)));
+        }
+        else if (type == "employee")
+        {
+            Console.WriteLine(rentalService.AddUser(new Employee(firstName, lastName)));
+        }
+        else
+        {
+            Console.WriteLine("Invalid user type.");
+        }
+    }
+
+    static void AddEquipmentMenu(RentalService rentalService)
+    {
+        Console.Write("Enter equipment type (laptop/projector/camera): ");
+        string? type = Console.ReadLine()?.Trim().ToLower();
+
+        Console.Write("Enter name: ");
+        string name = Console.ReadLine() ?? "";
+
+        Console.Write("Enter description: ");
+        string description = Console.ReadLine() ?? "";
+
+        switch (type)
+        {
+            case "laptop":
+                Console.Write("Enter brand: ");
+                string laptopBrand = Console.ReadLine() ?? "";
+
+                Console.Write("Enter RAM (GB): ");
+                int ramGb = int.Parse(Console.ReadLine() ?? "0");
+
+                Console.Write("Enter CPU: ");
+                string cpu = Console.ReadLine() ?? "";
+
+                Console.WriteLine(rentalService.AddEquipment(
+                    new Laptop(name, description, laptopBrand, ramGb, cpu)));
+                break;
+
+            case "projector":
+                Console.Write("Enter brightness (lumens): ");
+                int brightness = int.Parse(Console.ReadLine() ?? "0");
+
+                Console.Write("Enter resolution: ");
+                string resolution = Console.ReadLine() ?? "";
+
+                Console.Write("Enter technology (LCD/DLP/etc): ");
+                string technology = Console.ReadLine() ?? "";
+
+                Console.WriteLine(rentalService.AddEquipment(
+                    new Projector(name, description, brightness, resolution, technology)));
+                break;
+
+            case "camera":
+                Console.Write("Enter brand: ");
+                string cameraBrand = Console.ReadLine() ?? "";
+
+                Console.Write("Enter megapixels: ");
+                double megapixels = double.Parse(Console.ReadLine() ?? "0");
+
+                Console.Write("Interchangeable lens (true/false): ");
+                bool interchangeableLens = bool.Parse(Console.ReadLine() ?? "false");
+
+                Console.WriteLine(rentalService.AddEquipment(
+                    new Camera(name, description, cameraBrand, megapixels, interchangeableLens)));
+                break;
+
+            default:
+                Console.WriteLine("Invalid equipment type.");
+                break;
+        }
+    }
+
+    static void ShowAllEquipment(RentalService rentalService)
+    {
+        foreach (var equipment in rentalService.GetAllEquipment())
+        {
+            Console.WriteLine($"{equipment.Id} | {equipment.Name} | {equipment.status}");
+        }
+    }
+
+    static void ShowAvailableEquipment(RentalService rentalService)
+    {
+        foreach (var equipment in rentalService.GetAvailableEquipment())
+        {
+            Console.WriteLine($"{equipment.Id} | {equipment.Name} | {equipment.status}");
+        }
+    }
+
+    static void RentEquipmentMenu(RentalService rentalService)
+    {
+        Console.Write("Enter user id: ");
+        int userId = int.Parse(Console.ReadLine() ?? "0");
+
+        Console.Write("Enter equipment id: ");
+        int equipmentId = int.Parse(Console.ReadLine() ?? "0");
+
+        Console.Write("Enter rental length in days: ");
+        int rentalDays = int.Parse(Console.ReadLine() ?? "0");
+
+        Console.WriteLine(rentalService.RentEquipment(userId, equipmentId, rentalDays, DateTime.Today));
+    }
+
+    static void ReturnEquipmentMenu(RentalService rentalService)
+    {
+        Console.Write("Enter rental id: ");
+        int rentalId = int.Parse(Console.ReadLine() ?? "0");
+
+        Console.WriteLine(rentalService.ReturnEquipment(rentalId, DateTime.Today));
+    }
+
+    static void MarkEquipmentUnavailableMenu(RentalService rentalService)
+    {
+        Console.Write("Enter equipment id: ");
+        int equipmentId = int.Parse(Console.ReadLine() ?? "0");
+
+        Console.WriteLine(rentalService.MarkEquipmentUnavailable(equipmentId));
+    }
+
+    static void ShowActiveRentalsForUserMenu(RentalService rentalService)
+    {
+        Console.Write("Enter user id: ");
+        int userId = int.Parse(Console.ReadLine() ?? "0");
+
+        var rentals = rentalService.GetActiveRentalsForUser(userId);
+
+        bool any = false;
         foreach (var rental in rentals)
         {
             Console.WriteLine(rental);
@@ -125,7 +291,24 @@ public class Program
 
         if (!any)
         {
-            Console.WriteLine("No rentals found.");
+            Console.WriteLine("No active rentals for this user.");
+        }
+    }
+
+    static void ShowOverdueRentals(RentalService rentalService)
+    {
+        var rentals = rentalService.GetOverdueRentals(DateTime.Today);
+
+        bool any = false;
+        foreach (var rental in rentals)
+        {
+            Console.WriteLine(rental);
+            any = true;
+        }
+
+        if (!any)
+        {
+            Console.WriteLine("No overdue rentals.");
         }
     }
 }
