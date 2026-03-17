@@ -12,14 +12,10 @@ public class OperationResult
     }
 
     public static OperationResult Ok(string message)
-    {
-        return new OperationResult(true, message);
-    }
+        => new OperationResult(true, message);
 
     public static OperationResult Fail(string message)
-    {
-        return new OperationResult(false, message);
-    }
+        => new OperationResult(false, message);
 
     public override string ToString()
     {
