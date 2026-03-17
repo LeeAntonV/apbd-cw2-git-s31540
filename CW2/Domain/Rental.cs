@@ -1,20 +1,24 @@
 ﻿namespace CW2.Domain;
-    
+
 public class Rental
 {
     private static int _nextId = 1;
 
-    public int Id { get; }
-    public User User { get; }
-    public Equipment Equipment { get; }
-    public DateTime RentalDate { get; }
-    public DateTime DueDate { get; }
-    public DateTime? ReturnDate { get; private set; }
-    public decimal Penalty { get; private set; }
+    public int Id { get; set; }
+    public User User { get; set; } = null!;
+    public Equipment Equipment { get; set; } = null!;
+    public DateTime RentalDate { get; set; }
+    public DateTime DueDate { get; set; }
+    public DateTime? ActualReturnDate { get; set; }
+    public decimal Penalty { get; set; }
 
-    public bool IsActive => ReturnDate == null;
-    public bool IsReturned => ReturnDate != null;
-    public bool WasReturnedOnTime => ReturnDate != null && ReturnDate.Value.Date <= DueDate.Date;
+    public bool IsActive => ActualReturnDate == null;
+    public bool IsReturned => ActualReturnDate != null;
+    public bool WasReturnedOnTime => ActualReturnDate != null && ActualReturnDate.Value.Date <= DueDate.Date;
+
+    public Rental()
+    {
+    }
 
     public Rental(User user, Equipment equipment, DateTime rentalDate, int rentalDays)
     {
@@ -23,7 +27,7 @@ public class Rental
         Equipment = equipment;
         RentalDate = rentalDate;
         DueDate = rentalDate.AddDays(rentalDays);
-        ReturnDate = null;
+        ActualReturnDate = null;
         Penalty = 0;
     }
 
@@ -39,14 +43,22 @@ public class Rental
             throw new InvalidOperationException("This rental has already been returned.");
         }
 
-        ReturnDate = returnDate;
+        ActualReturnDate = returnDate;
         Penalty = penalty;
+    }
+
+    public static void SetNextId(int nextId)
+    {
+        if (nextId > _nextId)
+        {
+            _nextId = nextId;
+        }
     }
 
     public override string ToString()
     {
-        string returnText = ReturnDate.HasValue
-            ? ReturnDate.Value.ToString("yyyy-MM-dd")
+        string returnText = ActualReturnDate.HasValue
+            ? ActualReturnDate.Value.ToString("yyyy-MM-dd")
             : "Not returned";
 
         return $"Rental Id: {Id}, User: {User.FirstName} {User.LastName}, Equipment: {Equipment.Name}, " +
