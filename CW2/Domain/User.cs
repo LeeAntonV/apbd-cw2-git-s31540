@@ -1,7 +1,12 @@
 ﻿using CW2.Enum;
 
+using System.Text.Json.Serialization;
+
 namespace CW2.Domain;
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(Student), "student")]
+[JsonDerivedType(typeof(Employee), "employee")]
 public abstract class User
 {
     private static int _nextId = 1;
